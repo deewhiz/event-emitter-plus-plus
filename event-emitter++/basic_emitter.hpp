@@ -1,0 +1,4 @@
+#ifndef BASIC_EMITTER_HPP
+#define BASIC_EMITTER_HPP
+
+#endif // BASIC_EMITTER_HPP
