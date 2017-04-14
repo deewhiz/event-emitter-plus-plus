@@ -14,15 +14,28 @@ namespace eepp
 class bound_emitter
 {
 public:
+  /*! \brief Attach an event listener
+   *
+   * \param event_id The event to listen for
+   * \param fcn The function to be used as a callback
+   *
+   * \return This emitter to chain method calls
+   */
   template <typename ret>
-  bound_emitter &on(int event_id, ret(*f)())
+  bound_emitter &on(int event_id, ret(*fcn)())
   {
-    bound_fcn<> bf(f);
-    attach_handler(event_id, bf, true);
+    attach_handler(event_id, bound_fcn<>(fcn), true);
 
     return *this;
   }
 
+  /*! \brief Attach an event listener
+   *
+   * \param event_id The event to listen for
+   * \param bound The bound_fnc to be used as a callback
+   *
+   * \return This emitter to chain method calls
+   */
   template <typename... args>
   bound_emitter &on(int event_id, const bound_fcn<args...> &bound)
   {
@@ -31,6 +44,28 @@ public:
     return *this;
   }
 
+  /*! \brief Attach an event listener to be called only once
+   *
+   * \param event_id The event to listen for
+   * \param fcn The function to be used as a callback
+   *
+   * \return This emitter to chain method calls
+   */
+  template <typename ret>
+  bound_emitter &once(int event_id, ret(*fcn)())
+  {
+    attach_handler(event_id, bound_fcn<>(fcn), true);
+
+    return *this;
+  }
+
+  /*! \brief Attach an event listener to be called only once
+   *
+   * \param event_id The event to listen for
+   * \param bound The bound_fnc to be used as a callback
+   *
+   * \return This emitter to chain method calls
+   */
   template <typename... args>
   bound_emitter &once(int event_id, const bound_fcn<args...> &bound)
   {
@@ -39,6 +74,28 @@ public:
     return *this;
   }
 
+  /*! \brief Remove one event listener
+   *
+   * \param event_id The event to listen for
+   * \param fcn The function to be used as a callback
+   *
+   * \return This emitter to chain method calls
+   */
+  template <typename ret>
+  bound_emitter &remove_handler(int event_id, ret(*fcn)())
+  {
+    attach_handler(event_id, bound_fcn<>(fcn), true);
+
+    return *this;
+  }
+
+  /*! \brief Remove one event listener
+   *
+   * \param event_id The event to remove a listener for
+   * \param bound The bound_fnc to remove
+   *
+   * \return This emitter to chain method calls
+   */
   template <typename... args>
   bound_emitter &remove_handler(int event_id, const bound_fcn<args...> &bound)
   {
@@ -47,6 +104,13 @@ public:
     return *this;
   }
 
+  /*! \brief Remove event listeners for an event
+   *
+   * \param event_id The event to remove a listener for
+   * \param bound The bound_fnc to remove
+   *
+   * \return This emitter to chain method calls
+   */
   template <typename... args>
   bound_emitter &remove_handlers(int event_id, const bound_fcn<args...> &bound)
   {
@@ -55,6 +119,13 @@ public:
     return *this;
   }
 
+
+  /*! \brief Remove all event listener for an event
+   *
+   * \param event_id The event to remove a listener for
+   *
+   * \return This emitter to chain method calls
+   */
   bound_emitter &remove_all(int event_id)
   {
     std::map<std::type_index, std::list<event_handler>>().swap(handlers[event_id]);
@@ -62,6 +133,10 @@ public:
     return *this;
   }
 
+  /*! \brief Remove all event listeners
+   *
+   * \return This emitter to chain method calls
+   */
   bound_emitter &remove_all()
   {
     std::map<int, std::map<std::type_index, std::list<event_handler>>>().swap(handlers);
@@ -70,6 +145,11 @@ public:
   }
 
 protected:
+  /*! \brief Emits an event to call callbacks
+   *
+   * \param event_id The event to "emit"
+   * \param ...a The arguments to be passed to each callback function
+   */
   template <typename... args>
   void emit(int event_id, args ...a)
   {
@@ -90,6 +170,7 @@ protected:
     }
   }
 
+private:
   template <typename... args>
   void attach_handler(int event_id, bound_fcn<args...> func, bool once = false)
   {
