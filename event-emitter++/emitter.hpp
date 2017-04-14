@@ -11,7 +11,7 @@
 namespace eepp
 {
 
-class bound_emitter
+class emitter
 {
 public:
   /*! \brief Attach an event listener
@@ -22,7 +22,7 @@ public:
    * \return This emitter to chain method calls
    */
   template <typename ret>
-  bound_emitter &on(int event_id, ret(*fcn)())
+  emitter &on(int event_id, ret(*fcn)())
   {
     attach_handler(event_id, bound_fcn<>(fcn), true);
 
@@ -37,7 +37,7 @@ public:
    * \return This emitter to chain method calls
    */
   template <typename... args>
-  bound_emitter &on(int event_id, const bound_fcn<args...> &bound)
+  emitter &on(int event_id, const bound_fcn<args...> &bound)
   {
     attach_handler(event_id, bound);
 
@@ -52,7 +52,7 @@ public:
    * \return This emitter to chain method calls
    */
   template <typename ret>
-  bound_emitter &once(int event_id, ret(*fcn)())
+  emitter &once(int event_id, ret(*fcn)())
   {
     attach_handler(event_id, bound_fcn<>(fcn), true);
 
@@ -67,7 +67,7 @@ public:
    * \return This emitter to chain method calls
    */
   template <typename... args>
-  bound_emitter &once(int event_id, const bound_fcn<args...> &bound)
+  emitter &once(int event_id, const bound_fcn<args...> &bound)
   {
     attach_handler(event_id, bound, true);
 
@@ -82,7 +82,7 @@ public:
    * \return This emitter to chain method calls
    */
   template <typename ret>
-  bound_emitter &remove_handler(int event_id, ret(*fcn)())
+  emitter &remove_handler(int event_id, ret(*fcn)())
   {
     attach_handler(event_id, bound_fcn<>(fcn), true);
 
@@ -97,7 +97,7 @@ public:
    * \return This emitter to chain method calls
    */
   template <typename... args>
-  bound_emitter &remove_handler(int event_id, const bound_fcn<args...> &bound)
+  emitter &remove_handler(int event_id, const bound_fcn<args...> &bound)
   {
     detach_handler(event_id, bound);
 
@@ -112,7 +112,7 @@ public:
    * \return This emitter to chain method calls
    */
   template <typename... args>
-  bound_emitter &remove_handlers(int event_id, const bound_fcn<args...> &bound)
+  emitter &remove_handlers(int event_id, const bound_fcn<args...> &bound)
   {
     detach_handlers(event_id, bound);
 
@@ -126,7 +126,7 @@ public:
    *
    * \return This emitter to chain method calls
    */
-  bound_emitter &remove_all(int event_id)
+  emitter &remove_all(int event_id)
   {
     std::map<std::type_index, std::list<event_handler>>().swap(handlers[event_id]);
 
@@ -137,7 +137,7 @@ public:
    *
    * \return This emitter to chain method calls
    */
-  bound_emitter &remove_all()
+  emitter &remove_all()
   {
     std::map<int, std::map<std::type_index, std::list<event_handler>>>().swap(handlers);
 
@@ -214,8 +214,6 @@ private:
 
   std::map<int, std::map<std::type_index, std::list<event_handler>>> handlers;
 };
-
-
 
 } // namespace eepp
 

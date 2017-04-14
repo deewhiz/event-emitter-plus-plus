@@ -1,4 +1,0 @@
-#ifndef EMITTER_OBJECT_HPP
-#define EMITTER_OBJECT_HPP
-
-#endif // EMITTER_OBJECT_HPP

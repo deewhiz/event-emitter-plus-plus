@@ -26,6 +26,7 @@ struct bound_fcn: public bound_base {
       unbound_fcn(f),
       callback(std::bind(f, bv...))
     {}
+
     virtual ~func_args() {}
 
     virtual bool operator== (const function_proto &that)
