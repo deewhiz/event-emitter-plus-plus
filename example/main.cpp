@@ -6,13 +6,13 @@ void on_two(double *a, int b)
 {
   std::cout << "-------- on_two -------" << std::endl <<
                "a: " << *a << " b: " << b << std::endl <<
-               "-----------------------" << std::endl;
+               "-----------------------" << std::endl << std::endl;
 }
 
 void on_none()
 {
   std::cout << "------- on_none -------" << std::endl <<
-               "-----------------------" << std::endl;
+               "-----------------------" << std::endl << std::endl;
 }
 
 static int id = 3113;
@@ -26,13 +26,13 @@ public:
   void on_one(double *d) {
     std::cout << "---- test::on_one -----" << std::endl <<
                  "object id: " << test_id << " *d: " << *d << std::endl <<
-                 "-----------------------" << std::endl;
+                 "-----------------------" << std::endl << std::endl;
   }
 
   static void on_static(int i) {
     std::cout << "--- test::on_static ---" << std::endl <<
                  "i: " << i << std::endl <<
-                 "-----------------------" << std::endl;
+                 "-----------------------" << std::endl << std::endl;
   }
 
   const int test_id;
@@ -56,7 +56,9 @@ int main(int argc, char *argv[])
   e.on(generic_event::nothing, &on_none);
   e.on(generic_event::two_things, on_two1);
   e.on(generic_event::two_things, on_two2);
-  e.on(generic_event::one_thing, on_obj_static);
+  uint64_t on_one_id = e.on(generic_event::one_thing, on_obj_static);
+
+  e.remove_handler(generic_event::one_thing, on_one_id);
 
   // !WARNING! `t` that was bound in on_obj_mem MUST outlive `e` unless the handler is removed! //
   e.on(generic_event::one_thing, on_obj_mem);
