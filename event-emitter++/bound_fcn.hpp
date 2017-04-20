@@ -15,7 +15,6 @@ template <typename... args>
 struct bound_fcn: public bound_base {
   struct function_proto {
     virtual ~function_proto() {}
-    virtual bool operator== (const function_proto &that) = 0;
     virtual void operator()(args...) = 0;
   };
 
@@ -28,11 +27,6 @@ struct bound_fcn: public bound_base {
     {}
 
     virtual ~func_args() {}
-
-    virtual bool operator== (const function_proto &that)
-    {
-      return unbound_fcn == static_cast<const func_args<fcn, bvs...> &>(that).unbound_fcn;
-    }
 
     virtual void operator()(args... a)
     {
@@ -55,11 +49,6 @@ public:
   {}
 
   virtual ~bound_fcn() {}
-
-  bool operator== (const bound_fcn &that)
-  {
-    return *fp == *that.fp;
-  }
 
   void operator()(args... a)
   {
