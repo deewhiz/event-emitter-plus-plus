@@ -124,7 +124,7 @@ protected:
 
 private:
   template <typename... args>
-  uint64_t  attach_handler(int event_id, bound_fcn<args...> func, bool once = false)
+  uint64_t attach_handler(int event_id, bound_fcn<args...> func, bool once = false)
   {
     static uint64_t uid = 0;
     handlers[event_id][typeid(bound_fcn<args...>)].push_back({
@@ -150,7 +150,7 @@ private:
         if (handler->id == handler_id)
         {
           handler_list.erase(handler);
-          break;
+          return;
         }
     }
   }
