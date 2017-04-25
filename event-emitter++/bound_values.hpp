@@ -2,7 +2,6 @@
 #define EEPP_BOUND_VALUES_HPP
 
 #include <functional>
-#include <tuple>
 
 namespace eepp
 {
@@ -15,7 +14,7 @@ public:
     arg_list(std::make_tuple(args...))
   {}
 
-  bool operator ==(const bound_values &that)
+  bool operator ==(const bound_values &that) const
   {
     return compare(arg_list, that.arg_list);
   }
@@ -24,7 +23,7 @@ protected:
   // compare non-placeholder elements using '=='
   template <typename param>
   typename std::enable_if<!std::is_placeholder<param>::value, bool>::type
-    compare_element(const param &lhs, const param &rhs)
+    compare_element(const param &lhs, const param &rhs) const
   {
     return lhs == rhs;
   }
@@ -32,16 +31,15 @@ protected:
   // "compares" placeholder elements
   // assumes the arguments are the same place holder and thus always returns true
   template <typename param, typename = typename std::enable_if<std::is_placeholder<param>::value, bool>::type>
-  bool compare_element(const param &, const param &)
+  bool compare_element(const param &, const param &) const
   {
     return true;
   }
 
   template<std::size_t index = 0, typename... bound_args>
   typename std::enable_if<index < sizeof...(bound_args), bool>::type
-    compare(const std::tuple<bound_args...>& t, const std::tuple<bound_args...> & t2)
+    compare(const std::tuple<bound_args...>& t, const std::tuple<bound_args...> & t2) const
   {
-    std::cout << "comparing element " << index << std::endl;
     return compare_element(std::get<index>(t), std::get<index>(t2)) &&
         compare<index + 1, bound_args...>(t, t2);
   }
@@ -49,7 +47,7 @@ protected:
   // specialization: reached the end of the tuple
   template<std::size_t index = 0, typename... bound_args>
   typename std::enable_if<index == sizeof...(bound_args), bool>::type
-    compare(const std::tuple<bound_args...> &, const std::tuple<bound_args...> &)
+    compare(const std::tuple<bound_args...> &, const std::tuple<bound_args...> &) const
   {
     return true;
   }

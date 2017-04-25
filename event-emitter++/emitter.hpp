@@ -11,33 +11,45 @@
 namespace eepp
 {
 
+/*! \brief emitter is an object based event emitter
+ *
+ */
+
 class emitter
 {
 public:
+  emitter():
+    handlers(new handler_map())
+  {}
+
   /*! \brief Attach an event listener
    *
    * \param event_id The event to listen for
    * \param fcn The function to be used as a callback
    *
-   * \return A handler id to be used in when removing handlers
+   * \return This emitter to chain method calls
    */
   template <typename ret>
-  uint64_t on(int event_id, ret(*fcn)())
+  emitter &on(int event_id, ret(*fcn)())
   {
-    return attach_handler(event_id, bound_fcn<>(fcn), true);
+    attach_handler(event_id, bound_fcn<>(fcn));
+
+    return *this;
   }
 
   /*! \brief Attach an event listener
    *
    * \param event_id The event to listen for
-   * \param bound The bound_fnc to be used as a callback
+   * \param listener The bound_fnc to be used as a callback
    *
-   * \return A handler id to be used in when removing handlers
+   * \return This emitter to chain method calls
    */
   template <typename... args>
-  uint64_t on(int event_id, const bound_fcn<args...> &bound)
+  emitter &on(int event_id, const bound_fcn<args...> &listener)
   {
-    return attach_handler(event_id, bound);
+    attach_handler(event_id, listener);
+
+    return *this;
   }
 
   /*! \brief Attach an event listener to be called only once
@@ -45,37 +57,41 @@ public:
    * \param event_id The event to listen for
    * \param fcn The function to be used as a callback
    *
-   * \return A handler id to be used in when removing handlers
+   * \return This emitter to chain method calls
    */
   template <typename ret>
-  uint64_t once(int event_id, ret(*fcn)())
+  emitter &once(int event_id, ret(*fcn)())
   {
-    return attach_handler(event_id, bound_fcn<>(fcn), true);
+    attach_handler(event_id, bound_fcn<>(fcn), true);
+
+    return *this;
   }
 
   /*! \brief Attach an event listener to be called only once
    *
    * \param event_id The event to listen for
-   * \param bound The bound_fnc to be used as a callback
+   * \param listener The bound_fnc to be used as a callback
    *
-   * \return A handler id to be used in when removing handlers
+   * \return This emitter to chain method calls
    */
   template <typename... args>
-  uint64_t once(int event_id, const bound_fcn<args...> &bound)
+  emitter &once(int event_id, const bound_fcn<args...> &listener)
   {
-    return attach_handler(event_id, bound, true);
+    attach_handler(event_id, listener, true);
+
+    return *this;
   }
 
   /*! \brief Remove one event listener
    *
    * \param event_id The event to remove a listener for
-   * \param handler_id The handler id previous return by a call to on
+   * \param listener The listener function to be removed
    *
    */
   template <typename... args>
-  void remove_handler(int event_id, uint64_t handler_id)
+  bool remove_handler(int event_id, const bound_fcn<args...> &listener)
   {
-    detach_handler(event_id, handler_id);
+    return detach_handler(event_id, listener);
   }
 
   /*! \brief Remove all event listener for an event
@@ -85,7 +101,8 @@ public:
    */
   void remove_handlers(int event_id)
   {
-    std::map<std::type_index, std::list<event_handler>>().swap(handlers[event_id]);
+    if ((*handlers).count(event_id))
+      (*handlers)[event_id].clear();
   }
 
   /*! \brief Remove all event listeners
@@ -93,7 +110,7 @@ public:
    */
   void remove_handlers()
   {
-    std::map<int, std::map<std::type_index, std::list<event_handler>>>().swap(handlers);
+    (*handlers).clear();
   }
 
 protected:
@@ -105,9 +122,9 @@ protected:
   template <typename... args>
   void emit(int event_id, args ...a)
   {
-    if (handlers.count(event_id) && handlers[event_id].count(typeid(bound_fcn<args...>)))
+    if ((*handlers).count(event_id) && (*handlers)[event_id].count(typeid(bound_fcn<args...>)))
     {
-      std::list<event_handler> &handler_list = handlers[event_id][typeid(bound_fcn<args...>)];
+      std::list<event_handler> &handler_list = (*handlers)[event_id][typeid(bound_fcn<args...>)];
 
       auto handler = handler_list.begin();
       while (handler != handler_list.end())
@@ -124,45 +141,40 @@ protected:
 
 private:
   template <typename... args>
-  uint64_t attach_handler(int event_id, bound_fcn<args...> func, bool once = false)
+  void attach_handler(int event_id, const bound_fcn<args...> &func, bool once = false)
   {
-    static uint64_t uid = 0;
-    handlers[event_id][typeid(bound_fcn<args...>)].push_back({
-      std::shared_ptr<bound_base>(new bound_fcn<args...>(func)), once, ++uid
+    (*handlers)[event_id][typeid(bound_fcn<args...>)].push_back({
+      std::shared_ptr<bound_base>(new bound_fcn<args...>(func)), once
     });
-
-    return uid;
   }
 
-  void detach_handler(int event_id, uint64_t handler_id)
+  template <typename... args>
+  bool detach_handler(int event_id, const bound_fcn<args...> &listener)
   {
-    if (!handlers.count(event_id)) return;
+    if (!(*handlers).count(event_id) || !(*handlers)[event_id].count(typeid(listener))) return false;
 
-    std::map<std::type_index, std::list<event_handler>> &handler_map = handlers[event_id];
-    std::map<std::type_index, std::list<event_handler>>::iterator handler_iter;
+    std::list<event_handler> &handler_list = (*handlers)[event_id][typeid(listener)];
+    std::list<event_handler>::iterator handler;
 
-    for (handler_iter = handler_map.begin(); handler_iter != handler_map.end(); handler_iter++)
-    {
-      std::list<event_handler> &handler_list = handler_iter->second;
-      std::list<event_handler>::iterator handler;
+    for (handler = handler_list.begin(); handler != handler_list.end(); handler++)
+      if (*static_cast<const bound_fcn<args...> *>(&*handler->callback) == listener)
+      {
+        handler_list.erase(handler);
+        return true;
+      }
 
-      for (handler = handler_list.begin(); handler != handler_list.end(); handler++)
-        if (handler->id == handler_id)
-        {
-          handler_list.erase(handler);
-          return;
-        }
-    }
+    return false;
   }
 
   struct event_handler
   {
     std::shared_ptr<bound_base> callback;
     bool one_time;
-    uint64_t id;
   };
 
-  std::map<int, std::map<std::type_index, std::list<event_handler>>> handlers;
+
+  typedef std::map<int, std::map<std::type_index, std::list<event_handler>>> handler_map;
+  std::shared_ptr<handler_map> handlers;
 };
 
 } // namespace eepp

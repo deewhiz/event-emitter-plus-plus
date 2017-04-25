@@ -19,7 +19,7 @@ struct bound_fcn: public bound_base {
   struct function_interface {
     virtual ~function_interface() {}
     virtual void operator ()(params...) = 0;
-    virtual bool operator ==(const function_interface &) = 0;
+    virtual bool operator ==(const function_interface &) const = 0;
   };
 
   template<typename fcn, typename... bound_vals>
@@ -38,7 +38,7 @@ struct bound_fcn: public bound_base {
       callback(func_args...);
     }
 
-    virtual bool operator ==(const function_interface &that)
+    virtual bool operator ==(const function_interface &that) const
     {
       // should only get here if the function types match; casting should be fine
       return bound_args == static_cast<const func_with_args &>(that).bound_args;
@@ -70,12 +70,12 @@ public:
   }
 
   template <typename... that_params>
-  bool operator ==(const bound_fcn<that_params...> &that)
+  bool operator ==(const bound_fcn<that_params...> &that) const
   {
     return false;
   }
 
-  bool operator ==(const bound_fcn &that)
+  bool operator ==(const bound_fcn &that) const
   {
     return bound_func_type == that.bound_func_type && *func_prototype == *that.func_prototype;
   }

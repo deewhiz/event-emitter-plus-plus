@@ -38,11 +38,8 @@ public:
   const int test_id;
 };
 
-int main(int argc, char *argv[])
+void run_emitter()
 {
-  (void) argc;
-  (void) argv;
-
   emitter_object e;
   test t;
 
@@ -56,12 +53,13 @@ int main(int argc, char *argv[])
   e.on(generic_event::nothing, &on_none);
   e.on(generic_event::two_things, on_two1);
   e.on(generic_event::two_things, on_two2);
-  uint64_t on_one_id = e.on(generic_event::one_thing, on_obj_static);
+  e.on(generic_event::one_thing, on_obj_static);
 
-  e.remove_handler(generic_event::one_thing, on_one_id);
 
   // !WARNING! `t` that was bound in on_obj_mem MUST outlive `e` unless the handler is removed! //
   e.on(generic_event::one_thing, on_obj_mem);
+  e.on(generic_event::one_thing, on_obj_mem);
+  e.remove_handler(generic_event::one_thing, on_obj_mem);
 
   double d = 100;
 
@@ -77,6 +75,15 @@ int main(int argc, char *argv[])
 
   std::cout << "emit \"two_things\" (should do nothing)" << std::endl;
   e.emit_event(generic_event::two_things, 1, 2);
+
+}
+
+int main(int argc, char *argv[])
+{
+  (void) argc;
+  (void) argv;
+
+  run_emitter();
 
   return 0;
 }
