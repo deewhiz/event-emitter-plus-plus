@@ -18,8 +18,7 @@ namespace eepp
 class emitter
 {
 public:
-  emitter():
-    handlers(new handler_map())
+  emitter()
   {}
 
   /*! \brief Attach an event listener
@@ -101,8 +100,8 @@ public:
    */
   void remove_handlers(int event_id)
   {
-    if ((*handlers).count(event_id))
-      (*handlers)[event_id].clear();
+    if (handlers.count(event_id))
+      handlers[event_id].clear();
   }
 
   /*! \brief Remove all event listeners
@@ -110,7 +109,7 @@ public:
    */
   void remove_handlers()
   {
-    (*handlers).clear();
+    handlers.clear();
   }
 
 protected:
@@ -122,9 +121,9 @@ protected:
   template <typename... args>
   void emit(int event_id, args ...a)
   {
-    if ((*handlers).count(event_id) && (*handlers)[event_id].count(typeid(bound_fcn<args...>)))
+    if (handlers.count(event_id) && handlers[event_id].count(typeid(bound_fcn<args...>)))
     {
-      std::list<event_handler> &handler_list = (*handlers)[event_id][typeid(bound_fcn<args...>)];
+      std::list<event_handler> &handler_list = handlers[event_id][typeid(bound_fcn<args...>)];
 
       auto handler = handler_list.begin();
       while (handler != handler_list.end())
@@ -143,7 +142,7 @@ private:
   template <typename... args>
   void attach_handler(int event_id, const bound_fcn<args...> &func, bool once = false)
   {
-    (*handlers)[event_id][typeid(bound_fcn<args...>)].push_back({
+    handlers[event_id][typeid(bound_fcn<args...>)].push_back({
       std::shared_ptr<bound_base>(new bound_fcn<args...>(func)), once
     });
   }
@@ -151,9 +150,9 @@ private:
   template <typename... args>
   bool detach_handler(int event_id, const bound_fcn<args...> &listener)
   {
-    if (!(*handlers).count(event_id) || !(*handlers)[event_id].count(typeid(listener))) return false;
+    if (!handlers.count(event_id) || !handlers[event_id].count(typeid(listener))) return false;
 
-    std::list<event_handler> &handler_list = (*handlers)[event_id][typeid(listener)];
+    std::list<event_handler> &handler_list = handlers[event_id][typeid(listener)];
     std::list<event_handler>::iterator handler;
 
     for (handler = handler_list.begin(); handler != handler_list.end(); handler++)
@@ -174,7 +173,7 @@ private:
 
 
   typedef std::map<int, std::map<std::type_index, std::list<event_handler>>> handler_map;
-  std::shared_ptr<handler_map> handlers;
+  handler_map handlers;
 };
 
 } // namespace eepp
