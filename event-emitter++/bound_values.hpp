@@ -36,18 +36,18 @@ protected:
     return true;
   }
 
-  template<std::size_t index = 0, typename... bound_args>
-  typename std::enable_if<index < sizeof...(bound_args), bool>::type
-    compare(const std::tuple<bound_args...>& t, const std::tuple<bound_args...> & t2) const
+  template<std::size_t index = 0, typename... args>
+  typename std::enable_if<index < sizeof...(args), bool>::type
+    compare(const std::tuple<args...>& t, const std::tuple<args...> & t2) const
   {
     return compare_element(std::get<index>(t), std::get<index>(t2)) &&
         compare<index + 1, bound_args...>(t, t2);
   }
 
   // specialization: reached the end of the tuple
-  template<std::size_t index = 0, typename... bound_args>
-  typename std::enable_if<index == sizeof...(bound_args), bool>::type
-    compare(const std::tuple<bound_args...> &, const std::tuple<bound_args...> &) const
+  template<std::size_t index = 0, typename... args>
+  typename std::enable_if<index == sizeof...(args), bool>::type
+    compare(const std::tuple<args...> &, const std::tuple<args...> &) const
   {
     return true;
   }
